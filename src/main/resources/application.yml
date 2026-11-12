@@ -1,0 +1,46 @@
+server:
+  port: 2233
+
+spring:
+  application:
+    name: blog
+  data:
+    redis:
+      host: 192.168.10.139
+      port: 6379
+      username: default
+      password: 123456
+      database: ${REDIS_DATABASE:0}
+      connect-timeout: 2s
+      timeout: 2s
+
+  # datasource ??? application ????? spring ????
+  datasource:
+    driver-class-name: dm.jdbc.driver.DmDriver
+    url: jdbc:dm://192.168.10.139:15236/BLOG
+    username: SYSDBA
+    password: SYSDBA001
+
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 15
+      idle-timeout: 30000
+      connection-timeout: 30000
+
+blog:
+  auth:
+    token-ttl-seconds: ${LOGIN_TOKEN_TTL_SECONDS:7200}
+
+# springdoc-openapi ??
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.example.blog.controller  # ???? controller ???
+
