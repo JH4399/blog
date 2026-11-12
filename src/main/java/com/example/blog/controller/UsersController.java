@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @Tag(name = "用户登录", description = "用户登录模块")
-public class UserController {
+public class UsersController {
 
     private final UserService userService;
 
