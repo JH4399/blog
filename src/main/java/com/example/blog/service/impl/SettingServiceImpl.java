@@ -1,7 +1,7 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.common.PageQueries;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.blog.dto.ListQuery;
 import com.example.blog.dto.SettingsDTO;
 import com.example.blog.entity.Settings;
@@ -83,11 +83,14 @@ public class SettingServiceImpl implements SettingService {
     @Override
     public PageResult<SettingsVO> list(ListQuery query, UsersVO user) {
         requireAdmin(user);
-        String pattern = query.searchPattern();
+        String keyword = query.getQ() == null ? "" : query.getQ().trim();
         var wrapper = Wrappers.<Settings>lambdaQuery()
-                .and(pattern != null, w -> w.apply("LOWER(\"config_key\") LIKE {0} ESCAPE '!' OR LOWER(\"remark\") LIKE {0} ESCAPE '!'", pattern))
+                .and(!keyword.isEmpty(), w -> w.like(Settings::getConfigKey, keyword)
+                        .or().like(Settings::getRemark, keyword))
                 .orderByAsc(Settings::getId);
-        return PageQueries.select(query, page -> settingMapper.selectPage(page, wrapper), SettingServiceImpl::toVO);
+        var page = settingMapper.selectPage(new Page<Settings>(query.getPage(), query.getSize()), wrapper);
+        var records = page.getRecords().stream().map(SettingServiceImpl::toVO).toList();
+        return new PageResult<>(records, page.getTotal(), query.getPage(), query.getSize(), page.getPages());
     }
 
     @Override

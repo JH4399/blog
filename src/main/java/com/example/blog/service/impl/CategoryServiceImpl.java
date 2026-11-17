@@ -1,7 +1,7 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.common.PageQueries;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.blog.dto.CategoriesDTO;
 import com.example.blog.dto.ListQuery;
 import com.example.blog.entity.Categories;
@@ -80,11 +80,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public PageResult<CategoriesVO> list(ListQuery query) {
-        String pattern = query.searchPattern();
+        String keyword = query.getQ() == null ? "" : query.getQ().trim();
         var wrapper = Wrappers.<Categories>lambdaQuery()
-                .and(pattern != null, w -> w.apply("LOWER(\"name\") LIKE {0} ESCAPE '!' OR LOWER(\"slug\") LIKE {0} ESCAPE '!'", pattern))
+                .and(!keyword.isEmpty(), w -> w.like(Categories::getName, keyword)
+                        .or().like(Categories::getSlug, keyword))
                 .orderByAsc(Categories::getSort, Categories::getId);
-        return PageQueries.select(query, page -> categoryMapper.selectPage(page, wrapper), CategoryServiceImpl::toVO);
+        var page = categoryMapper.selectPage(new Page<Categories>(query.getPage(), query.getSize()), wrapper);
+        var records = page.getRecords().stream().map(CategoryServiceImpl::toVO).toList();
+        return new PageResult<>(records, page.getTotal(), query.getPage(), query.getSize(), page.getPages());
     }
 
     @Override

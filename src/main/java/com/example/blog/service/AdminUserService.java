@@ -1,7 +1,7 @@
 package com.example.blog.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.common.PageQueries;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.blog.dto.AdminUserUpdateDTO;
 import com.example.blog.dto.UserListQuery;
 import com.example.blog.entity.Users;
@@ -26,7 +26,8 @@ public class AdminUserService {
 
     public PageResult<UserListVO> list(UserListQuery query, UsersVO currentUser) {
         requireAdmin(currentUser);
-        return PageQueries.select(query, page -> userMapper.selectListPage(page, query));
+        var page = userMapper.selectListPage(new Page<UserListVO>(query.getPage(), query.getSize()), query);
+        return new PageResult<>(page.getRecords(), page.getTotal(), query.getPage(), query.getSize(), page.getPages());
     }
 
     @Transactional

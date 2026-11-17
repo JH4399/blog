@@ -7,8 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Locale;
-
 /** 公共分页和搜索参数；省略时使用默认值，空值和非法值由 Spring MVC 校验。 */
 @Getter
 @Setter
@@ -24,13 +22,6 @@ public class ListQuery {
     private int size = 10;
 
     @Size(max = 200, message = "搜索词不能超过200字符")
-    @Schema(description = "搜索词，按字面量搜索，最多200字符")
+    @Schema(description = "模糊搜索词，最多200字符，支持%和_通配符")
     private String q = "";
-
-    /** SQL LIKE 的绑定值，保持大小写不敏感，并按字面量搜索通配符。 */
-    public String searchPattern() {
-        if (q == null || q.isBlank()) return null;
-        return "%" + q.trim().toLowerCase(Locale.ROOT)
-                .replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
-    }
 }

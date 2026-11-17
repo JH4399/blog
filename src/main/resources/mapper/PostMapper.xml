@@ -3,7 +3,8 @@
 <mapper namespace="com.example.blog.mapper.PostMapper">
     <!-- 仅声明业务字段、过滤和排序，COUNT 与分页由 MyBatis-Plus 插件处理。 -->
     <select id="selectListPage" resultType="com.example.blog.vo.PostListVO">
-        <bind name="pattern" value="query.searchPattern()"/>
+        <bind name="keyword" value="query.q == null ? '' : query.q.trim()"/>
+        <bind name="pattern" value="'%' + keyword + '%'"/>
         SELECT p."id", p."user_id", p."category_id", p."title", p."slug", p."status",
                p."is_top", p."view_count", p."like_count", p."comment_count", p."created_at",
                COALESCE(u."nickname", u."username") AS "author_name", c."name" AS "category_name"
@@ -15,12 +16,12 @@
         <if test="query.categoryId != null">AND p."category_id"=#{query.categoryId}</if>
         <if test="query.authorId != null">AND p."user_id"=#{query.authorId}</if>
         <if test="visibleAuthorId != null">AND p."user_id"=#{visibleAuthorId}</if>
-        <if test="pattern != null">
-            AND (LOWER(p."title") LIKE #{pattern} ESCAPE '!'
-              OR LOWER(p."slug") LIKE #{pattern} ESCAPE '!'
-              OR LOWER(u."nickname") LIKE #{pattern} ESCAPE '!'
-              OR LOWER(u."username") LIKE #{pattern} ESCAPE '!'
-              OR LOWER(CAST(p."id" AS VARCHAR(30))) LIKE #{pattern} ESCAPE '!')
+        <if test="keyword != ''">
+            AND (p."title" LIKE #{pattern}
+              OR p."slug" LIKE #{pattern}
+              OR u."nickname" LIKE #{pattern}
+              OR u."username" LIKE #{pattern}
+              OR CAST(p."id" AS VARCHAR(30)) LIKE #{pattern})
         </if>
         ORDER BY
         <choose>

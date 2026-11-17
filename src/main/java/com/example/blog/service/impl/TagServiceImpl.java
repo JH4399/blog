@@ -1,7 +1,7 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.common.PageQueries;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.blog.dto.ListQuery;
 import com.example.blog.dto.TagsDTO;
 import com.example.blog.entity.Tags;
@@ -77,11 +77,14 @@ public class TagServiceImpl implements TagService {
 
     @Override
     public PageResult<TagsVO> list(ListQuery query) {
-        String pattern = query.searchPattern();
+        String keyword = query.getQ() == null ? "" : query.getQ().trim();
         var wrapper = Wrappers.<Tags>lambdaQuery()
-                .and(pattern != null, w -> w.apply("LOWER(\"name\") LIKE {0} ESCAPE '!' OR LOWER(\"slug\") LIKE {0} ESCAPE '!'", pattern))
+                .and(!keyword.isEmpty(), w -> w.like(Tags::getName, keyword)
+                        .or().like(Tags::getSlug, keyword))
                 .orderByAsc(Tags::getId);
-        return PageQueries.select(query, page -> tagMapper.selectPage(page, wrapper), TagServiceImpl::toVO);
+        var page = tagMapper.selectPage(new Page<Tags>(query.getPage(), query.getSize()), wrapper);
+        var records = page.getRecords().stream().map(TagServiceImpl::toVO).toList();
+        return new PageResult<>(records, page.getTotal(), query.getPage(), query.getSize(), page.getPages());
     }
 
     @Override

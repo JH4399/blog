@@ -1,7 +1,7 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.common.PageQueries;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.blog.dto.PostListQuery;
 import com.example.blog.dto.PostsDTO;
 import com.example.blog.entity.Posts;
@@ -115,7 +115,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResult<PostListVO> list(PostListQuery query, UsersVO user) {
-        return PageQueries.select(query, page -> postMapper.selectListPage(page, query, isAdmin(user) ? null : user.getId()));
+        var page = postMapper.selectListPage(new Page<PostListVO>(query.getPage(), query.getSize()),
+                query, isAdmin(user) ? null : user.getId());
+        return new PageResult<>(page.getRecords(), page.getTotal(), query.getPage(), query.getSize(), page.getPages());
     }
 
     @Override

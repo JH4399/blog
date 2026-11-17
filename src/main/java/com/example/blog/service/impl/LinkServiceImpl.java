@@ -1,7 +1,7 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.common.PageQueries;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.blog.dto.LinkListQuery;
 import com.example.blog.dto.LinksDTO;
 import com.example.blog.entity.Links;
@@ -54,12 +54,15 @@ public class LinkServiceImpl implements LinkService {
 
     @Override
     public PageResult<LinksVO> list(LinkListQuery query) {
-        String pattern = query.searchPattern();
+        String keyword = query.getQ() == null ? "" : query.getQ().trim();
         var wrapper = Wrappers.<Links>lambdaQuery()
                 .eq(query.getStatus() != null, Links::getStatus, query.getStatus())
-                .and(pattern != null, w -> w.apply("LOWER(\"name\") LIKE {0} ESCAPE '!' OR LOWER(\"url\") LIKE {0} ESCAPE '!'", pattern))
+                .and(!keyword.isEmpty(), w -> w.like(Links::getName, keyword)
+                        .or().like(Links::getUrl, keyword))
                 .orderByAsc(Links::getSort, Links::getId);
-        return PageQueries.select(query, page -> linkMapper.selectPage(page, wrapper), LinkServiceImpl::toVO);
+        var page = linkMapper.selectPage(new Page<Links>(query.getPage(), query.getSize()), wrapper);
+        var records = page.getRecords().stream().map(LinkServiceImpl::toVO).toList();
+        return new PageResult<>(records, page.getTotal(), query.getPage(), query.getSize(), page.getPages());
     }
 
     @Override
