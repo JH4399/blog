@@ -2,11 +2,14 @@ package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.example.blog.dto.CategoriesDTO;
+import com.example.blog.dto.SearchListQuery;
 import com.example.blog.entity.Categories;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.CategoryMapper;
+import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.service.CategoryService;
 import com.example.blog.vo.CategoriesVO;
+import com.example.blog.vo.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
@@ -15,12 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /** 分类增删改查，唯一约束和外键约束由数据库兜底。 */
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
+
+    private final ListPageMapper listPageMapper;
 
     private final CategoryMapper categoryMapper;
 
@@ -77,10 +81,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoriesVO> list() {
-        return categoryMapper.selectList(Wrappers.<Categories>lambdaQuery()
-                        .orderByAsc(Categories::getSort, Categories::getId))
-                .stream().map(CategoryServiceImpl::toVO).toList();
+    public PageResult<CategoriesVO> list(SearchListQuery query) {
+        return listPageMapper.selectCategoriesPage(query);
     }
 
     @Override

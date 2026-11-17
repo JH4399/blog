@@ -1,11 +1,14 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.example.blog.dto.SearchListQuery;
 import com.example.blog.dto.SettingsDTO;
 import com.example.blog.entity.Settings;
 import com.example.blog.exception.BusinessException;
+import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.mapper.SettingMapper;
 import com.example.blog.service.SettingService;
+import com.example.blog.vo.PageResult;
 import com.example.blog.vo.SettingsVO;
 import com.example.blog.vo.UsersVO;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class SettingServiceImpl implements SettingService {
+
+    private final ListPageMapper listPageMapper;
 
     private final SettingMapper settingMapper;
 
@@ -79,10 +83,9 @@ public class SettingServiceImpl implements SettingService {
     }
 
     @Override
-    public List<SettingsVO> list(UsersVO user) {
+    public PageResult<SettingsVO> list(SearchListQuery query, UsersVO user) {
         requireAdmin(user);
-        return settingMapper.selectList(Wrappers.<Settings>lambdaQuery().orderByAsc(Settings::getId))
-                .stream().map(SettingServiceImpl::toVO).toList();
+        return listPageMapper.selectSettingsPage(query);
     }
 
     @Override

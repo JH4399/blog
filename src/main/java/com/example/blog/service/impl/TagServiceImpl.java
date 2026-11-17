@@ -1,11 +1,14 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.example.blog.dto.SearchListQuery;
 import com.example.blog.dto.TagsDTO;
 import com.example.blog.entity.Tags;
 import com.example.blog.exception.BusinessException;
+import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.mapper.TagMapper;
 import com.example.blog.service.TagService;
+import com.example.blog.vo.PageResult;
 import com.example.blog.vo.TagsVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,12 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /** 标签增删改查，唯一约束和外键约束由数据库兜底。 */
 @Service
 @RequiredArgsConstructor
 public class TagServiceImpl implements TagService {
+
+    private final ListPageMapper listPageMapper;
 
     private final TagMapper tagMapper;
 
@@ -74,9 +78,8 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public List<TagsVO> list() {
-        return tagMapper.selectList(Wrappers.<Tags>lambdaQuery().orderByAsc(Tags::getId))
-                .stream().map(TagServiceImpl::toVO).toList();
+    public PageResult<TagsVO> list(SearchListQuery query) {
+        return listPageMapper.selectTagsPage(query);
     }
 
     @Override

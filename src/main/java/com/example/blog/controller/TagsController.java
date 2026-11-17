@@ -1,6 +1,8 @@
 package com.example.blog.controller;
 
 import com.example.blog.common.ApiResponse;
+import com.example.blog.vo.PageResult;
+import com.example.blog.dto.SearchListQuery;
 import com.example.blog.dto.TagsDTO;
 import com.example.blog.service.TagService;
 import com.example.blog.vo.TagsVO;
@@ -9,9 +11,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tags")
@@ -50,10 +52,10 @@ public class TagsController {
         return ApiResponse.success("删除成功", null);
     }
 
-    @Operation(summary = "查询标签列表", description = "按 ID 升序返回全部标签")
-    @GetMapping
-    public ApiResponse<List<TagsVO>> list() {
-        return ApiResponse.success(tagService.list());
+    @Operation(summary = "查询标签列表", description = "分页查询，默认page=1、size=10；返回records、total、page、size、pages")
+    @GetMapping(produces = "application/json")
+    public ApiResponse<PageResult<TagsVO>> list(@Valid @ParameterObject @ModelAttribute SearchListQuery query) {
+        return ApiResponse.success(tagService.list(query));
     }
 
     @Operation(summary = "查询标签详情", description = "标签不存在返回 404")

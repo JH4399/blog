@@ -1,12 +1,14 @@
 package com.example.blog.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.example.blog.dto.LinksDTO;
+import com.example.blog.dto.LinkListQuery;
 import com.example.blog.entity.Links;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.LinkMapper;
+import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.service.LinkService;
 import com.example.blog.vo.LinksVO;
+import com.example.blog.vo.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,11 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class LinkServiceImpl implements LinkService {
+
+    private final ListPageMapper listPageMapper;
 
     private final LinkMapper linkMapper;
 
@@ -51,11 +54,8 @@ public class LinkServiceImpl implements LinkService {
     }
 
     @Override
-    public List<LinksVO> list(Integer status) {
-        return linkMapper.selectList(Wrappers.<Links>lambdaQuery()
-                        .eq(status != null, Links::getStatus, status)
-                        .orderByAsc(Links::getSort, Links::getId))
-                .stream().map(LinkServiceImpl::toVO).toList();
+    public PageResult<LinksVO> list(LinkListQuery query) {
+        return listPageMapper.selectLinksPage(query);
     }
 
     @Override

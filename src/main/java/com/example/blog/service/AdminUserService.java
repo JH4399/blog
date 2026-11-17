@@ -2,9 +2,13 @@ package com.example.blog.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.example.blog.dto.AdminUserUpdateDTO;
+import com.example.blog.dto.UserListQuery;
 import com.example.blog.entity.Users;
 import com.example.blog.exception.BusinessException;
+import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.mapper.UserMapper;
+import com.example.blog.vo.PageResult;
+import com.example.blog.vo.UserListVO;
 import com.example.blog.vo.UsersVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -14,18 +18,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AdminUserService {
     private final UserMapper userMapper;
+    private final ListPageMapper listPageMapper;
 
-    public List<UsersVO> list(UsersVO currentUser) {
+    public PageResult<UserListVO> list(UserListQuery query, UsersVO currentUser) {
         requireAdmin(currentUser);
-        return userMapper.selectList(Wrappers.<Users>lambdaQuery()
-                        .orderByDesc(Users::getCreatedAt, Users::getId))
-                .stream().map(AdminUserService::toVO).toList();
+        return listPageMapper.selectUsersPage(query);
     }
 
     @Transactional

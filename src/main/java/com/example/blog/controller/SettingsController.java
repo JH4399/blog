@@ -3,6 +3,8 @@ package com.example.blog.controller;
 import com.example.blog.auth.LoginInterceptor;
 import com.example.blog.auth.LoginRequired;
 import com.example.blog.common.ApiResponse;
+import com.example.blog.vo.PageResult;
+import com.example.blog.dto.SearchListQuery;
 import com.example.blog.dto.SettingsDTO;
 import com.example.blog.service.SettingService;
 import com.example.blog.vo.SettingsVO;
@@ -13,10 +15,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/settings")
@@ -52,10 +53,11 @@ public class SettingsController {
         return ApiResponse.success("删除成功", null);
     }
 
-    @Operation(summary = "查询配置列表", description = "按 ID 升序返回全部配置")
-    @GetMapping
-    public ApiResponse<List<SettingsVO>> list(@RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
-        return ApiResponse.success(settingService.list(user));
+    @Operation(summary = "查询配置列表", description = "分页查询，默认page=1、size=10；返回records、total、page、size、pages")
+    @GetMapping(produces = "application/json")
+    public ApiResponse<PageResult<SettingsVO>> list(@Valid @ParameterObject @ModelAttribute SearchListQuery query,
+            @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
+        return ApiResponse.success(settingService.list(query, user));
     }
 
     @Operation(summary = "查询配置详情", description = "配置不存在返回 404")

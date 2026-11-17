@@ -1,20 +1,19 @@
 package com.example.blog.controller;
 
 import com.example.blog.common.ApiResponse;
+import com.example.blog.vo.PageResult;
 import com.example.blog.dto.LinksDTO;
+import com.example.blog.dto.LinkListQuery;
 import com.example.blog.service.LinkService;
 import com.example.blog.vo.LinksVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/links")
@@ -38,10 +37,10 @@ public class LinksController {
         return ApiResponse.success(linkService.update(id, request));
     }
 
-    @Operation(summary = "查询友情链接列表", description = "可按状态筛选；不传返回全部，按排序值、ID 升序")
-    @GetMapping
-    public ApiResponse<List<LinksVO>> list(@RequestParam(required = false) @Min(0) @Max(1) Integer status) {
-        return ApiResponse.success(linkService.list(status));
+    @Operation(summary = "查询友情链接列表", description = "分页查询，默认page=1、size=10；返回records、total、page、size、pages")
+    @GetMapping(produces = "application/json")
+    public ApiResponse<PageResult<LinksVO>> list(@Valid @ParameterObject @ModelAttribute LinkListQuery query) {
+        return ApiResponse.success(linkService.list(query));
     }
 
     @Operation(summary = "查询友情链接详情", description = "不存在返回 404")

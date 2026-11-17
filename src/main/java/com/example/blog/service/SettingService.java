@@ -1,10 +1,11 @@
 package com.example.blog.service;
 
+import com.example.blog.dto.SearchListQuery;
 import com.example.blog.dto.SettingsDTO;
+import com.example.blog.vo.PageResult;
 import com.example.blog.vo.SettingsVO;
 import com.example.blog.vo.UsersVO;
 
-import java.util.List;
 
 /** 系统配置业务接口，仅管理员可访问。 */
 public interface SettingService {
@@ -15,7 +16,7 @@ public interface SettingService {
 
     void delete(Long id, UsersVO user);
 
-    List<SettingsVO> list(UsersVO user);
-
     SettingsVO get(Long id, UsersVO user);
+
+    PageResult<SettingsVO> list(SearchListQuery query, UsersVO user);
 }

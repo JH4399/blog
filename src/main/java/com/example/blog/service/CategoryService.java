@@ -1,9 +1,10 @@
 package com.example.blog.service;
 
 import com.example.blog.dto.CategoriesDTO;
+import com.example.blog.dto.SearchListQuery;
 import com.example.blog.vo.CategoriesVO;
+import com.example.blog.vo.PageResult;
 
-import java.util.List;
 
 /** 分类业务接口。 */
 public interface CategoryService {
@@ -14,7 +15,7 @@ public interface CategoryService {
 
     void delete(Long id);
 
-    List<CategoriesVO> list();
-
     CategoriesVO get(Long id);
+
+    PageResult<CategoriesVO> list(SearchListQuery query);
 }

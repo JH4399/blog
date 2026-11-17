@@ -3,9 +3,12 @@ package com.example.blog.controller;
 import com.example.blog.auth.LoginInterceptor;
 import com.example.blog.auth.LoginRequired;
 import com.example.blog.common.ApiResponse;
+import com.example.blog.vo.PageResult;
+import com.example.blog.dto.PostListQuery;
 import com.example.blog.dto.PostsDTO;
 import com.example.blog.service.PostService;
 import com.example.blog.vo.PostsVO;
+import com.example.blog.vo.PostListVO;
 import com.example.blog.vo.UsersVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -13,10 +16,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -52,10 +56,17 @@ public class PostsController {
         return ApiResponse.success("删除成功", null);
     }
 
-    @Operation(summary = "查询文章列表", description = "普通用户查询本人文章，管理员查询全部；排除已删除文章，按置顶、创建时间、ID 降序")
-    @GetMapping
-    public ApiResponse<List<PostsVO>> list(@RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
-        return ApiResponse.success(postService.list(user));
+    @Operation(summary = "查询文章列表", description = "分页查询，默认page=1、size=10；返回records、total、page、size、pages")
+    @GetMapping(produces = "application/json")
+    public ApiResponse<PageResult<PostListVO>> list(@Valid @ParameterObject @ModelAttribute PostListQuery query,
+            @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
+        return ApiResponse.success(postService.list(query, user));
+    }
+
+    @GetMapping("/summary")
+    @Operation(summary = "全站统计", description = "仅管理员；返回全站统计与最近10篇文章，不受分页筛选影响")
+    public ApiResponse<Map<String, Object>> summary(@RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
+        return ApiResponse.success(postService.summary(user));
     }
 
     @Operation(summary = "查询文章详情", description = "仅作者或管理员可查看；不存在或已删除返回 404")
