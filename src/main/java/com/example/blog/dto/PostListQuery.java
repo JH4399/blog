@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PostListQuery extends SearchListQuery {
+public class PostListQuery extends ListQuery {
     @Min(0)
     @Max(2)
     @Schema(description = "文章状态：0草稿、1已发布、2私密")

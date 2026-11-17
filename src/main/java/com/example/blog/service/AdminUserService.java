@@ -1,11 +1,11 @@
 package com.example.blog.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.example.blog.common.PageQueries;
 import com.example.blog.dto.AdminUserUpdateDTO;
 import com.example.blog.dto.UserListQuery;
 import com.example.blog.entity.Users;
 import com.example.blog.exception.BusinessException;
-import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.mapper.UserMapper;
 import com.example.blog.vo.PageResult;
 import com.example.blog.vo.UserListVO;
@@ -23,11 +23,10 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AdminUserService {
     private final UserMapper userMapper;
-    private final ListPageMapper listPageMapper;
 
     public PageResult<UserListVO> list(UserListQuery query, UsersVO currentUser) {
         requireAdmin(currentUser);
-        return listPageMapper.selectUsersPage(query);
+        return PageQueries.select(query, page -> userMapper.selectListPage(page, query));
     }
 
     @Transactional

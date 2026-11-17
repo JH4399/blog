@@ -1,11 +1,11 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.common.PageQueries;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.dto.TagsDTO;
 import com.example.blog.entity.Tags;
 import com.example.blog.exception.BusinessException;
-import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.mapper.TagMapper;
 import com.example.blog.service.TagService;
 import com.example.blog.vo.PageResult;
@@ -23,8 +23,6 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class TagServiceImpl implements TagService {
-
-    private final ListPageMapper listPageMapper;
 
     private final TagMapper tagMapper;
 
@@ -78,8 +76,12 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public PageResult<TagsVO> list(SearchListQuery query) {
-        return listPageMapper.selectTagsPage(query);
+    public PageResult<TagsVO> list(ListQuery query) {
+        String pattern = query.searchPattern();
+        var wrapper = Wrappers.<Tags>lambdaQuery()
+                .and(pattern != null, w -> w.apply("LOWER(\"name\") LIKE {0} ESCAPE '!' OR LOWER(\"slug\") LIKE {0} ESCAPE '!'", pattern))
+                .orderByAsc(Tags::getId);
+        return PageQueries.select(query, page -> tagMapper.selectPage(page, wrapper), TagServiceImpl::toVO);
     }
 
     @Override

@@ -3,7 +3,7 @@ package com.example.blog.controller;
 import com.example.blog.common.ApiResponse;
 import com.example.blog.vo.PageResult;
 import com.example.blog.dto.CategoriesDTO;
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.service.CategoryService;
 import com.example.blog.vo.CategoriesVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +55,7 @@ public class CategoriesController {
 
     @Operation(summary = "查询分类列表", description = "分页查询，默认page=1、size=10；返回records、total、page、size、pages")
     @GetMapping(produces = "application/json")
-    public ApiResponse<PageResult<CategoriesVO>> list(@Valid @ParameterObject @ModelAttribute SearchListQuery query) {
+    public ApiResponse<PageResult<CategoriesVO>> list(@Valid @ParameterObject @ModelAttribute ListQuery query) {
         return ApiResponse.success(categoryService.list(query));
     }
 

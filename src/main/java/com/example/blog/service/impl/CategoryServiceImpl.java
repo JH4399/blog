@@ -1,12 +1,12 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.example.blog.common.PageQueries;
 import com.example.blog.dto.CategoriesDTO;
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.entity.Categories;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.CategoryMapper;
-import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.service.CategoryService;
 import com.example.blog.vo.CategoriesVO;
 import com.example.blog.vo.PageResult;
@@ -23,8 +23,6 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
-
-    private final ListPageMapper listPageMapper;
 
     private final CategoryMapper categoryMapper;
 
@@ -81,8 +79,12 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public PageResult<CategoriesVO> list(SearchListQuery query) {
-        return listPageMapper.selectCategoriesPage(query);
+    public PageResult<CategoriesVO> list(ListQuery query) {
+        String pattern = query.searchPattern();
+        var wrapper = Wrappers.<Categories>lambdaQuery()
+                .and(pattern != null, w -> w.apply("LOWER(\"name\") LIKE {0} ESCAPE '!' OR LOWER(\"slug\") LIKE {0} ESCAPE '!'", pattern))
+                .orderByAsc(Categories::getSort, Categories::getId);
+        return PageQueries.select(query, page -> categoryMapper.selectPage(page, wrapper), CategoryServiceImpl::toVO);
     }
 
     @Override

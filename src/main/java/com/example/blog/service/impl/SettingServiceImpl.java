@@ -1,11 +1,11 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.common.PageQueries;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.dto.SettingsDTO;
 import com.example.blog.entity.Settings;
 import com.example.blog.exception.BusinessException;
-import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.mapper.SettingMapper;
 import com.example.blog.service.SettingService;
 import com.example.blog.vo.PageResult;
@@ -24,8 +24,6 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class SettingServiceImpl implements SettingService {
-
-    private final ListPageMapper listPageMapper;
 
     private final SettingMapper settingMapper;
 
@@ -83,9 +81,13 @@ public class SettingServiceImpl implements SettingService {
     }
 
     @Override
-    public PageResult<SettingsVO> list(SearchListQuery query, UsersVO user) {
+    public PageResult<SettingsVO> list(ListQuery query, UsersVO user) {
         requireAdmin(user);
-        return listPageMapper.selectSettingsPage(query);
+        String pattern = query.searchPattern();
+        var wrapper = Wrappers.<Settings>lambdaQuery()
+                .and(pattern != null, w -> w.apply("LOWER(\"config_key\") LIKE {0} ESCAPE '!' OR LOWER(\"remark\") LIKE {0} ESCAPE '!'", pattern))
+                .orderByAsc(Settings::getId);
+        return PageQueries.select(query, page -> settingMapper.selectPage(page, wrapper), SettingServiceImpl::toVO);
     }
 
     @Override

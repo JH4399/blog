@@ -1,6 +1,6 @@
 package com.example.blog.service;
 
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.dto.SettingsDTO;
 import com.example.blog.vo.PageResult;
 import com.example.blog.vo.SettingsVO;
@@ -18,5 +18,5 @@ public interface SettingService {
 
     SettingsVO get(Long id, UsersVO user);
 
-    PageResult<SettingsVO> list(SearchListQuery query, UsersVO user);
+    PageResult<SettingsVO> list(ListQuery query, UsersVO user);
 }

@@ -1,13 +1,15 @@
 package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.example.blog.common.PageQueries;
 import com.example.blog.dto.PostListQuery;
 import com.example.blog.dto.PostsDTO;
 import com.example.blog.entity.Posts;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.CategoryMapper;
-import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.mapper.PostMapper;
+import com.example.blog.mapper.TagMapper;
+import com.example.blog.mapper.UserMapper;
 import com.example.blog.service.PostService;
 import com.example.blog.vo.PageResult;
 import com.example.blog.vo.PostListVO;
@@ -22,13 +24,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
-    private final ListPageMapper listPageMapper;
+    private final UserMapper userMapper;
+    private final TagMapper tagMapper;
 
     private final PostMapper postMapper;
     private final CategoryMapper categoryMapper;
@@ -111,7 +115,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResult<PostListVO> list(PostListQuery query, UsersVO user) {
-        return listPageMapper.selectPostsPage(query, isAdmin(user) ? null : user.getId());
+        return PageQueries.select(query, page -> postMapper.selectListPage(page, query, isAdmin(user) ? null : user.getId()));
     }
 
     @Override
@@ -183,6 +187,13 @@ public class PostServiceImpl implements PostService {
     @Override
     public Map<String, Object> summary(UsersVO user) {
         if (!isAdmin(user)) throw BusinessException.forbidden("仅管理员可查看全站统计");
-        return listPageMapper.selectSummary();
+        Map<String, Object> result = new LinkedHashMap<>(postMapper.selectSummary());
+        result.putAll(userMapper.selectSummary());
+        result.put("categories", categoryMapper.selectCount(null));
+        result.put("tags", tagMapper.selectCount(null));
+        PostListQuery recent = new PostListQuery();
+        recent.setSort("newest");
+        result.put("recent", list(recent, user).records());
+        return result;
     }
 }

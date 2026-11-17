@@ -1,7 +1,7 @@
 package com.example.blog.service;
 
 import com.example.blog.dto.CategoriesDTO;
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.vo.CategoriesVO;
 import com.example.blog.vo.PageResult;
 
@@ -17,5 +17,5 @@ public interface CategoryService {
 
     CategoriesVO get(Long id);
 
-    PageResult<CategoriesVO> list(SearchListQuery query);
+    PageResult<CategoriesVO> list(ListQuery query);
 }

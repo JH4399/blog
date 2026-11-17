@@ -4,7 +4,7 @@ import com.example.blog.auth.LoginInterceptor;
 import com.example.blog.auth.LoginRequired;
 import com.example.blog.common.ApiResponse;
 import com.example.blog.vo.PageResult;
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.dto.SettingsDTO;
 import com.example.blog.service.SettingService;
 import com.example.blog.vo.SettingsVO;
@@ -55,7 +55,7 @@ public class SettingsController {
 
     @Operation(summary = "查询配置列表", description = "分页查询，默认page=1、size=10；返回records、total、page、size、pages")
     @GetMapping(produces = "application/json")
-    public ApiResponse<PageResult<SettingsVO>> list(@Valid @ParameterObject @ModelAttribute SearchListQuery query,
+    public ApiResponse<PageResult<SettingsVO>> list(@Valid @ParameterObject @ModelAttribute ListQuery query,
             @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
         return ApiResponse.success(settingService.list(query, user));
     }

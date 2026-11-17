@@ -1,11 +1,12 @@
 package com.example.blog.service.impl;
 
-import com.example.blog.dto.LinksDTO;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.example.blog.common.PageQueries;
 import com.example.blog.dto.LinkListQuery;
+import com.example.blog.dto.LinksDTO;
 import com.example.blog.entity.Links;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.LinkMapper;
-import com.example.blog.mapper.ListPageMapper;
 import com.example.blog.service.LinkService;
 import com.example.blog.vo.LinksVO;
 import com.example.blog.vo.PageResult;
@@ -21,8 +22,6 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class LinkServiceImpl implements LinkService {
-
-    private final ListPageMapper listPageMapper;
 
     private final LinkMapper linkMapper;
 
@@ -55,7 +54,12 @@ public class LinkServiceImpl implements LinkService {
 
     @Override
     public PageResult<LinksVO> list(LinkListQuery query) {
-        return listPageMapper.selectLinksPage(query);
+        String pattern = query.searchPattern();
+        var wrapper = Wrappers.<Links>lambdaQuery()
+                .eq(query.getStatus() != null, Links::getStatus, query.getStatus())
+                .and(pattern != null, w -> w.apply("LOWER(\"name\") LIKE {0} ESCAPE '!' OR LOWER(\"url\") LIKE {0} ESCAPE '!'", pattern))
+                .orderByAsc(Links::getSort, Links::getId);
+        return PageQueries.select(query, page -> linkMapper.selectPage(page, wrapper), LinkServiceImpl::toVO);
     }
 
     @Override

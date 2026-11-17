@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LinkListQuery extends SearchListQuery {
+public class LinkListQuery extends ListQuery {
     @Min(0)
     @Max(1)
     @Schema(description = "友链状态：0隐藏、1显示；省略时不按状态筛选")

@@ -1,6 +1,6 @@
 package com.example.blog.service;
 
-import com.example.blog.dto.SearchListQuery;
+import com.example.blog.dto.ListQuery;
 import com.example.blog.dto.TagsDTO;
 import com.example.blog.vo.PageResult;
 import com.example.blog.vo.TagsVO;
@@ -17,5 +17,5 @@ public interface TagService {
 
     TagsVO get(Long id);
 
-    PageResult<TagsVO> list(SearchListQuery query);
+    PageResult<TagsVO> list(ListQuery query);
 }

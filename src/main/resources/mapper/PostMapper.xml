@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.blog.mapper.PostMapper">
+    <!-- 仅声明业务字段、过滤和排序，COUNT 与分页由 MyBatis-Plus 插件处理。 -->
+    <select id="selectListPage" resultType="com.example.blog.vo.PostListVO">
+        <bind name="pattern" value="query.searchPattern()"/>
+        SELECT p."id", p."user_id", p."category_id", p."title", p."slug", p."status",
+               p."is_top", p."view_count", p."like_count", p."comment_count", p."created_at",
+               COALESCE(u."nickname", u."username") AS "author_name", c."name" AS "category_name"
+        FROM "BLOG"."posts" p
+        LEFT JOIN "BLOG"."users" u ON u."id"=p."user_id"
+        LEFT JOIN "BLOG"."categories" c ON c."id"=p."category_id"
+        WHERE p."deleted_at" IS NULL
+        <if test="query.status != null">AND p."status"=#{query.status}</if>
+        <if test="query.categoryId != null">AND p."category_id"=#{query.categoryId}</if>
+        <if test="query.authorId != null">AND p."user_id"=#{query.authorId}</if>
+        <if test="visibleAuthorId != null">AND p."user_id"=#{visibleAuthorId}</if>
+        <if test="pattern != null">
+            AND (LOWER(p."title") LIKE #{pattern} ESCAPE '!'
+              OR LOWER(p."slug") LIKE #{pattern} ESCAPE '!'
+              OR LOWER(u."nickname") LIKE #{pattern} ESCAPE '!'
+              OR LOWER(u."username") LIKE #{pattern} ESCAPE '!'
+              OR LOWER(CAST(p."id" AS VARCHAR(30))) LIKE #{pattern} ESCAPE '!')
+        </if>
+        ORDER BY
+        <choose>
+            <when test="query.sort == 'views'">p."view_count" DESC,</when>
+            <when test="query.sort == 'likes'">p."like_count" DESC,</when>
+            <when test="query.sort == 'newest'">p."created_at" DESC,</when>
+            <otherwise>p."is_top" DESC, p."created_at" DESC,</otherwise>
+        </choose>
+        p."id" DESC
+    </select>
+</mapper>

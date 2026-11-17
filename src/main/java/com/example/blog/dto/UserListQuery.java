@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserListQuery extends SearchListQuery {
+public class UserListQuery extends ListQuery {
     @Min(0)
     @Max(1)
     @Schema(description = "用户状态：0禁用、1正常")
