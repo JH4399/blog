@@ -15,7 +15,7 @@ import java.util.Map;
 @Mapper
 public interface PostMapper extends BaseMapper<Posts> {
     IPage<PostListVO> selectListPage(IPage<PostListVO> page, @Param("query") PostListQuery query,
-            @Param("visibleAuthorId") Long visibleAuthorId);
+            @Param("viewerId") Long viewerId);
 
     @Select("""
             SELECT COUNT(*) AS "posts",

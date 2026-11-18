@@ -21,7 +21,7 @@ public class PostListQuery extends ListQuery {
     private Long categoryId;
 
     @Positive
-    @Schema(description = "作者ID，普通用户仍仅能查询本人文章")
+    @Schema(description = "作者ID，普通用户仅能查询本人文章及他人已发布文章")
     private Long authorId;
 
     @Pattern(regexp = "newest|views|likes")

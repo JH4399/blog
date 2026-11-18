@@ -12,10 +12,18 @@
         LEFT JOIN "BLOG"."users" u ON u."id"=p."user_id"
         LEFT JOIN "BLOG"."categories" c ON c."id"=p."category_id"
         WHERE p."deleted_at" IS NULL
-        <if test="query.status != null">AND p."status"=#{query.status}</if>
-        <if test="query.categoryId != null">AND p."category_id"=#{query.categoryId}</if>
-        <if test="query.authorId != null">AND p."user_id"=#{query.authorId}</if>
-        <if test="visibleAuthorId != null">AND p."user_id"=#{visibleAuthorId}</if>
+        <if test="query.status != null">
+            AND p."status"=#{query.status}
+        </if>
+        <if test="query.categoryId != null">
+            AND p."category_id"=#{query.categoryId}
+        </if>
+        <if test="query.authorId != null">
+            AND p."user_id"=#{query.authorId}
+        </if>
+        <if test="viewerId != null">
+            AND (p."user_id"=#{viewerId} OR p."status"=1)
+        </if>
         <if test="keyword != ''">
             AND (p."title" LIKE #{pattern}
               OR p."slug" LIKE #{pattern}

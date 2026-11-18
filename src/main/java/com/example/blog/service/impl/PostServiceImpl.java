@@ -70,7 +70,7 @@ public class PostServiceImpl implements PostService {
         if (request.getId() != null && !id.equals(request.getId())) {
             throw BusinessException.badRequest("请求体 ID 必须与路径 ID 一致");
         }
-        Posts post = requireAccessiblePost(id, user);
+        Posts post = requireManageablePost(id, user);
         requireAuthor(request, post.getUserId());
         requireCategory(request.getCategoryId());
         requireUniqueSlug(request.getSlug(), id);
@@ -103,7 +103,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void delete(Long id, UsersVO user) {
-        requireAccessiblePost(id, user);
+        requireManageablePost(id, user);
         LocalDateTime now = LocalDateTime.now();
         int changed = postMapper.update(null, Wrappers.<Posts>lambdaUpdate()
                 .eq(Posts::getId, id).isNull(Posts::getDeletedAt)
@@ -122,17 +122,27 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostsVO get(Long id, UsersVO user) {
-        return toVO(requireAccessiblePost(id, user));
+        Posts post = requirePost(id);
+        if (!isAdmin(user) && !post.getUserId().equals(user.getId())
+                && !Integer.valueOf(1).equals(post.getStatus())) {
+            throw BusinessException.forbidden("无权查看其他用户的草稿或私密文章");
+        }
+        return toVO(post);
     }
 
-    private Posts requireAccessiblePost(Long id, UsersVO user) {
+    private Posts requirePost(Long id) {
         Posts post = postMapper.selectOne(Wrappers.<Posts>lambdaQuery()
                 .eq(Posts::getId, id).isNull(Posts::getDeletedAt));
         if (post == null) {
             throw BusinessException.notFound("文章不存在或已删除");
         }
+        return post;
+    }
+
+    private Posts requireManageablePost(Long id, UsersVO user) {
+        Posts post = requirePost(id);
         if (!isAdmin(user) && !post.getUserId().equals(user.getId())) {
-            throw BusinessException.forbidden("无权访问其他用户的文章");
+            throw BusinessException.forbidden("无权管理其他用户的文章");
         }
         return post;
     }

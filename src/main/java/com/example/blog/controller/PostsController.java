@@ -56,7 +56,7 @@ public class PostsController {
         return ApiResponse.success("删除成功", null);
     }
 
-    @Operation(summary = "查询文章列表", description = "分页查询，默认page=1、size=10；返回records、total、page、size、pages")
+    @Operation(summary = "查询文章列表", description = "普通用户可查看本人文章和他人已发布文章，管理员可查看全部；分页默认page=1、size=10")
     @GetMapping(produces = "application/json")
     public ApiResponse<PageResult<PostListVO>> list(@Valid @ParameterObject @ModelAttribute PostListQuery query,
             @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
@@ -69,7 +69,7 @@ public class PostsController {
         return ApiResponse.success(postService.summary(user));
     }
 
-    @Operation(summary = "查询文章详情", description = "仅作者或管理员可查看；不存在或已删除返回 404")
+    @Operation(summary = "查询文章详情", description = "已发布文章登录后可查看，草稿和私密文章仅作者或管理员可查看；不存在或已删除返回 404")
     @GetMapping("/{id}")
     public ApiResponse<PostsVO> get(@PathVariable @Positive Long id,
             @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
