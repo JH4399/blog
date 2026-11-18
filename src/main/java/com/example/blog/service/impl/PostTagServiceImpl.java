@@ -31,7 +31,7 @@ public class PostTagServiceImpl implements PostTagService {
     @Override
     @Transactional
     public PostTagsVO create(PostTagsDTO request, UsersVO user) {
-        requirePost(request.getPostId(), user, true);
+        requireManageablePost(request.getPostId(), user);
         requireTag(request.getTagId());
         requireUniqueRelation(request.getPostId(), request.getTagId());
         PostTags relation = new PostTags();
@@ -50,7 +50,7 @@ public class PostTagServiceImpl implements PostTagService {
     @Override
     @Transactional
     public PostTagsVO update(Long postId, Long tagId, PostTagsDTO request, UsersVO user) {
-        requirePost(postId, user, true);
+        requireManageablePost(postId, user);
         if (!postId.equals(request.getPostId())) {
             throw BusinessException.badRequest("请求体文章 ID 必须与路径文章 ID 一致");
         }
@@ -76,7 +76,7 @@ public class PostTagServiceImpl implements PostTagService {
     @Override
     @Transactional
     public void delete(Long postId, Long tagId, UsersVO user) {
-        requirePost(postId, user, true);
+        requireManageablePost(postId, user);
         try {
             if (postTagMapper.delete(postId, tagId) == 0) {
                 throw BusinessException.notFound("文章标签关联不存在");
@@ -88,17 +88,17 @@ public class PostTagServiceImpl implements PostTagService {
 
     @Override
     public List<PostTagsVO> list(Long postId, UsersVO user) {
-        requirePost(postId, user, false);
+        requireReadablePost(postId, user);
         return postTagMapper.selectByPostId(postId).stream().map(PostTagServiceImpl::toVO).toList();
     }
 
     @Override
     public PostTagsVO get(Long postId, Long tagId, UsersVO user) {
-        requirePost(postId, user, false);
+        requireReadablePost(postId, user);
         return toVO(requireRelation(postId, tagId));
     }
 
-    private void requirePost(Long postId, UsersVO user, boolean lock) {
+    private Posts requirePost(Long postId, boolean lock) {
         var query = Wrappers.<Posts>lambdaQuery().eq(Posts::getId, postId).isNull(Posts::getDeletedAt);
         if (lock) {
             // 与文章更新、软删除共享文章行锁，串行化同一文章的关联写入。
@@ -108,9 +108,25 @@ public class PostTagServiceImpl implements PostTagService {
         if (post == null) {
             throw BusinessException.notFound("文章不存在或已删除");
         }
-        if (!Integer.valueOf(2).equals(user.getRole()) && !user.getId().equals(post.getUserId())) {
-            throw BusinessException.forbidden("无权访问其他用户的文章标签关联");
+        return post;
+    }
+
+    private void requireReadablePost(Long postId, UsersVO user) {
+        Posts post = requirePost(postId, false);
+        if (!canManage(post, user) && !Integer.valueOf(1).equals(post.getStatus())) {
+            throw BusinessException.forbidden("无权查看其他用户草稿或私密文章的标签关联");
         }
+    }
+
+    private void requireManageablePost(Long postId, UsersVO user) {
+        Posts post = requirePost(postId, true);
+        if (!canManage(post, user)) {
+            throw BusinessException.forbidden("无权管理其他用户的文章标签关联");
+        }
+    }
+
+    private static boolean canManage(Posts post, UsersVO user) {
+        return Integer.valueOf(2).equals(user.getRole()) || user.getId().equals(post.getUserId());
     }
 
     private void requireTag(Long tagId) {

@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @LoginRequired
 @SecurityRequirement(name = "BearerAuth")
-@Tag(name = "文章标签关联模块", description = "仅文章作者或管理员可管理文章标签关联")
+@Tag(name = "文章标签关联模块", description = "登录后可查看已发布文章的标签关联；仅文章作者或管理员可管理关联")
 public class PostsTagsController {
 
     private final PostTagService postTagService;
@@ -52,14 +52,14 @@ public class PostsTagsController {
         return ApiResponse.success("删除成功", null);
     }
 
-    @Operation(summary = "查询文章标签关联列表", description = "postId 必填；按标签 ID 升序返回")
+    @Operation(summary = "查询文章标签关联列表", description = "postId 必填；已发布文章登录后可查看，草稿和私密文章仅作者或管理员可查看；按标签 ID 升序返回")
     @GetMapping
     public ApiResponse<List<PostTagsVO>> list(@RequestParam @Positive Long postId,
             @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
         return ApiResponse.success(postTagService.list(postId, user));
     }
 
-    @Operation(summary = "查询文章标签关联", description = "通过文章 ID 和标签 ID 定位关联；不存在返回 404")
+    @Operation(summary = "查询文章标签关联", description = "通过文章 ID 和标签 ID 定位关联；已发布文章登录后可查看，草稿和私密文章仅作者或管理员可查看；不存在返回 404")
     @GetMapping("/{postId}/{tagId}")
     public ApiResponse<PostTagsVO> get(@PathVariable @Positive Long postId, @PathVariable @Positive Long tagId,
             @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
