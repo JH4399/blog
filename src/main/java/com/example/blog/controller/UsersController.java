@@ -3,20 +3,29 @@ package com.example.blog.controller;
 import com.example.blog.common.ApiResponse;
 import com.example.blog.auth.LoginInterceptor;
 import com.example.blog.auth.LoginRequired;
+import com.example.blog.dto.UsersDTO;
+import com.example.blog.dto.UserListQuery;
 import com.example.blog.dto.UserLoginDTO;
 import com.example.blog.dto.UserRegisterDTO;
 import com.example.blog.service.UserService;
+import com.example.blog.vo.PageResult;
+import com.example.blog.vo.UserListVO;
 import com.example.blog.vo.UsersVO;
 import com.example.blog.vo.UserLoginVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,10 +39,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
-@Tag(name = "用户登录", description = "用户登录模块")
+@Tag(name = "用户管理", description = "用户注册、登录及管理员用户管理")
 public class UsersController {
 
     private final UserService userService;
+
+    @LoginRequired
+    @SecurityRequirement(name = "BearerAuth")
+    @GetMapping(produces = "application/json")
+    @Operation(summary = "分页查询用户", description = "仅管理员可访问；默认page=1、size=10；返回records、total、page、size、pages")
+    public ApiResponse<PageResult<UserListVO>> list(@Valid @ParameterObject @ModelAttribute UserListQuery query,
+            @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
+        return ApiResponse.success(userService.list(query, user));
+    }
+
+    @LoginRequired
+    @SecurityRequirement(name = "BearerAuth")
+    @PutMapping("/{id}")
+    @Operation(summary = "修改用户", description = "仅管理员可访问；完整提交可编辑字段；不允许禁用或降级当前账户，不修改用户名、密码和创建时间")
+    public ApiResponse<UsersVO> update(@PathVariable @Positive Long id,
+            @Valid @RequestBody UsersDTO request,
+            @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
+        return ApiResponse.success(userService.update(id, request, user));
+    }
 
     /**
      * 注册普通用户，返回不含密码的用户资料。

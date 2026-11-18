@@ -1,14 +1,24 @@
 package com.example.blog.service;
 
+import com.example.blog.dto.UsersDTO;
+import com.example.blog.dto.UserListQuery;
 import com.example.blog.dto.UserLoginDTO;
 import com.example.blog.dto.UserRegisterDTO;
 import com.example.blog.vo.UserLoginVO;
+import com.example.blog.vo.PageResult;
+import com.example.blog.vo.UserListVO;
 import com.example.blog.vo.UsersVO;
 
 /**
  * 用户业务接口。
  */
 public interface UserService {
+
+    /** 管理员分页查询用户，不返回密码。 */
+    PageResult<UserListVO> list(UserListQuery query, UsersVO currentUser);
+
+    /** 管理员修改用户资料、角色和状态，禁止禁用或降级当前账户。 */
+    UsersVO update(Long id, UsersDTO request, UsersVO currentUser);
 
     /**
      * 校验用户名是否重复，加密密码并注册普通用户。
