@@ -44,10 +44,6 @@ public class CommentsVO {
     @Schema(description = "评论内容")
     private String content;
 
-    /** 状态：0 待审核，1 已通过，2 已拒绝。 */
-    @Schema(description = "状态：0 待审核，1 已通过，2 已拒绝")
-    private Integer status;
-
     /** 创建时间。 */
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;

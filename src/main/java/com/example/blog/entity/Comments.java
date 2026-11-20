@@ -59,11 +59,6 @@ public class Comments {
     @TableField("\"content\"")
     private String content;
 
-    /** 状态，对应 status，必填：0 待审核，1 已通过，2 已拒绝；数据库默认值为 0。 */
-    @Schema(description = "状态：0 待审核，1 已通过，2 已拒绝")
-    @TableField("\"status\"")
-    private Integer status;
-
     /** IP 地址，对应 ip，可空，最长 45 个字符。 */
     @Schema(description = "IP 地址", maxLength = 45)
     @TableField("\"ip\"")

@@ -1,4 +1,4 @@
-package com.example.blog.service;
+package com.example.blog.auth;
 
 import com.example.blog.common.RedisService;
 import com.example.blog.config.AuthProperties;
@@ -6,7 +6,7 @@ import com.example.blog.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -18,9 +18,9 @@ import java.util.HexFormat;
 import java.util.regex.Pattern;
 
 /** 随机 Token 登录态：Redis 仅保存摘要和用户 ID，不保存原始凭据。 */
-@Service
+@Component
 @RequiredArgsConstructor
-public class TokenService {
+public class TokenManager {
 
     public static final String KEY_PREFIX = "login:token:";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");

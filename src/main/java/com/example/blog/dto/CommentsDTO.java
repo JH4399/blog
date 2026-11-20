@@ -14,7 +14,7 @@ import lombok.Setter;
  * 评论新增参数。
  * 对应 {@link com.example.blog.entity.Comments}，字段独立声明。
  * 不允许指定 ID；当前接口要求登录，昵称省略时取登录用户昵称或用户名。
- * userId 应由服务端根据登录状态确定，status 由审核接口维护。
+ * userId 应由服务端根据登录状态确定。
  */
 @Getter
 @Setter
@@ -63,8 +63,4 @@ public class CommentsDTO {
     @NotBlank(message = "评论内容不能为空")
     private String content;
 
-    /** 审核状态：0 待审核，1 已通过，2 已拒绝；由审核接口维护。 */
-    @Schema(description = "状态由服务端设置为待审核，请勿传入")
-    @Null(message = "审核状态由服务端维护")
-    private Integer status;
 }

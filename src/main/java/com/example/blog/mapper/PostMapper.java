@@ -8,12 +8,21 @@ import com.example.blog.vo.PostListVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.Map;
 
 /** 文章数据访问接口。软删除过滤由业务层显式添加。 */
 @Mapper
 public interface PostMapper extends BaseMapper<Posts> {
+    /** 仅累加仍公开的文章，不改变文章更新时间或其他统计。 */
+    @Update("""
+            UPDATE "BLOG"."posts"
+            SET "view_count" = "view_count" + 1
+            WHERE "id" = #{id} AND "status" = 1 AND "deleted_at" IS NULL
+            """)
+    int incrementPublishedViewCount(@Param("id") Long id);
+
     IPage<PostListVO> selectListPage(IPage<PostListVO> page, @Param("query") PostListQuery query,
             @Param("viewerId") Long viewerId);
 

@@ -40,7 +40,6 @@ public class CommentServiceImpl implements CommentService {
             if (!post.getId().equals(parent.getPostId())) {
                 throw BusinessException.badRequest("父评论必须属于同一篇文章");
             }
-            requireVisible(parent, post, user);
         }
         Comments comment = new Comments();
         comment.setPostId(post.getId());
@@ -57,13 +56,14 @@ public class CommentServiceImpl implements CommentService {
         comment.setEmail(request.getEmail());
         comment.setWebsite(request.getWebsite());
         comment.setContent(request.getContent());
-        comment.setStatus(0);
         // 只记录连接地址，不信任客户端可伪造的转发头。
         comment.setIp(truncate(ip, 45));
         comment.setUserAgent(truncate(userAgent, 255));
         comment.setCreatedAt(LocalDateTime.now());
         try {
             commentMapper.insert(comment);
+            postMapper.update(null, Wrappers.<Posts>lambdaUpdate().eq(Posts::getId, post.getId())
+                    .setSql("\"comment_count\" = \"comment_count\" + 1"));
         } catch (DataIntegrityViolationException exception) {
             throw new BusinessException(HttpStatus.CONFLICT, "文章、用户或父评论数据已变更，请刷新后重试", exception);
         }
@@ -87,11 +87,8 @@ public class CommentServiceImpl implements CommentService {
             if (commentMapper.deleteById(id) == 0) {
                 throw BusinessException.notFound("评论不存在");
             }
-            // comment_count 仅统计已通过评论，待审核和已拒绝评论不计数。
-            if (Integer.valueOf(1).equals(comment.getStatus())) {
-                postMapper.update(null, Wrappers.<Posts>lambdaUpdate().eq(Posts::getId, post.getId())
-                        .setSql("\"comment_count\" = CASE WHEN \"comment_count\" > 0 THEN \"comment_count\" - 1 ELSE 0 END"));
-            }
+            postMapper.update(null, Wrappers.<Posts>lambdaUpdate().eq(Posts::getId, post.getId())
+                    .setSql("\"comment_count\" = CASE WHEN \"comment_count\" > 0 THEN \"comment_count\" - 1 ELSE 0 END"));
         } catch (DataIntegrityViolationException exception) {
             throw new BusinessException(HttpStatus.CONFLICT, "评论关联数据已变更，请刷新后重试", exception);
         }
@@ -99,11 +96,9 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentsVO> list(Long postId, UsersVO user) {
-        Posts post = requirePost(postId, user, false);
+        requirePost(postId, user, false);
         return commentMapper.selectList(Wrappers.<Comments>lambdaQuery()
                         .eq(Comments::getPostId, postId)
-                        .and(!canManage(post, user), query -> query.eq(Comments::getStatus, 1)
-                                .or().eq(Comments::getUserId, user.getId()))
                         .orderByAsc(Comments::getCreatedAt, Comments::getId))
                 .stream().map(CommentServiceImpl::toVO).toList();
     }
@@ -111,8 +106,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentsVO get(Long id, UsersVO user) {
         Comments comment = requireComment(id);
-        Posts post = requirePost(comment.getPostId(), user, false);
-        requireVisible(comment, post, user);
+        requirePost(comment.getPostId(), user, false);
         return toVO(comment);
     }
 
@@ -137,13 +131,6 @@ public class CommentServiceImpl implements CommentService {
             throw BusinessException.notFound("评论不存在");
         }
         return comment;
-    }
-
-    private static void requireVisible(Comments comment, Posts post, UsersVO user) {
-        if (!canManage(post, user) && !user.getId().equals(comment.getUserId())
-                && !Integer.valueOf(1).equals(comment.getStatus())) {
-            throw BusinessException.forbidden("无权查看该评论");
-        }
     }
 
     private static boolean canManage(Posts post, UsersVO user) {

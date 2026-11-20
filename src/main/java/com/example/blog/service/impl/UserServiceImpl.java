@@ -10,7 +10,7 @@ import com.example.blog.entity.Users;
 import com.example.blog.exception.BusinessException;
 import com.example.blog.mapper.UserMapper;
 import com.example.blog.service.UserService;
-import com.example.blog.service.TokenService;
+import com.example.blog.auth.TokenManager;
 import com.example.blog.vo.UserLoginVO;
 import com.example.blog.vo.PageResult;
 import com.example.blog.vo.UserListVO;
@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService;
+    private final TokenManager tokenManager;
 
     // 用户不存在时也执行 BCrypt 校验，减少由密码运算耗时产生的账户枚举差异。
     private static final String DUMMY_PASSWORD_HASH =
@@ -124,20 +124,20 @@ public class UserServiceImpl implements UserService {
             throw BusinessException.unauthorized("用户名或密码错误");
         }
         requireActive(user);
-        TokenService.IssuedToken issued = tokenService.issue(user.getId());
+        TokenManager.IssuedToken issued = tokenManager.issue(user.getId());
         return new UserLoginVO(issued.value(), "Bearer", issued.expiresIn(), toVO(user));
     }
 
     @Override
     public UsersVO currentUser(String token) {
-        Long userId = tokenService.requireUserId(token);
+        Long userId = tokenManager.requireUserId(token);
         Users user = userMapper.selectById(userId);
         if (user == null) {
-            tokenService.revoke(token);
+            tokenManager.revoke(token);
             throw BusinessException.unauthorized("用户不存在，请重新登录");
         }
         if (!Integer.valueOf(1).equals(user.getStatus())) {
-            tokenService.revoke(token);
+            tokenManager.revoke(token);
             throw BusinessException.forbidden("账号已被禁用");
         }
         return toVO(user);
@@ -145,7 +145,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void logout(String token) {
-        tokenService.revoke(token);
+        tokenManager.revoke(token);
     }
 
     private static void requireAdmin(UsersVO currentUser) {

@@ -29,7 +29,7 @@ public class CommentsController {
 
     private final CommentService commentService;
 
-    @Operation(summary = "新增评论", description = "评论用户取自登录态，默认待审核；支持同一文章下的回复")
+    @Operation(summary = "新增评论", description = "评论用户取自登录态，提交后立即可见；支持同一文章下的回复")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CommentsVO> create(@Valid @RequestBody CommentsDTO request,
@@ -47,7 +47,7 @@ public class CommentsController {
         return ApiResponse.success("删除成功", null);
     }
 
-    @Operation(summary = "查询文章评论", description = "按创建时间、ID 升序；普通用户仅可见已通过评论及本人评论，文章作者和管理员可见全部")
+    @Operation(summary = "查询文章评论", description = "有权访问文章的用户可查询该文章全部评论，按创建时间、ID 升序")
     @GetMapping
     public ApiResponse<List<CommentsVO>> list(@RequestParam @Positive Long postId,
             @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {

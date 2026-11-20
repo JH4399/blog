@@ -2,6 +2,7 @@ package com.example.blog.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.example.blog.component.PostViewCounter;
 import com.example.blog.dto.PostListQuery;
 import com.example.blog.dto.PostsDTO;
 import com.example.blog.entity.Posts;
@@ -16,6 +17,7 @@ import com.example.blog.vo.PostListVO;
 import com.example.blog.vo.PostsVO;
 import com.example.blog.vo.UsersVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -36,6 +39,7 @@ public class PostServiceImpl implements PostService {
 
     private final PostMapper postMapper;
     private final CategoryMapper categoryMapper;
+    private final PostViewCounter postViewCounter;
 
     @Override
     @Transactional
@@ -128,6 +132,34 @@ public class PostServiceImpl implements PostService {
             throw BusinessException.forbidden("无权查看其他用户的草稿或私密文章");
         }
         return toVO(post);
+    }
+
+    @Override
+    public PostsVO read(Long id, Long readerId, String remoteAddress, boolean countView) {
+        Posts post = requirePublishedPost(id);
+        if (!countView || post.getUserId().equals(readerId)) {
+            return toVO(post);
+        }
+        if (readerId == null && (remoteAddress == null || remoteAddress.isBlank())) {
+            throw BusinessException.badRequest("无法识别访客地址");
+        }
+        String identity = readerId == null ? "ip:" + remoteAddress : "user:" + readerId;
+        if (identity.contains("ip:")) log.info("用户未登录，此次记录的ip是：" + identity);
+        if (identity.contains("user:")) log.info("用户已登录，id是:" + identity);
+        if (postViewCounter.countOnce(id, identity)) {
+            // 读取发生在计数事务之后；读取失败不撤销已经成功的计数。
+            post = requirePublishedPost(id);
+        }
+        return toVO(post);
+    }
+
+    private Posts requirePublishedPost(Long id) {
+        Posts post = postMapper.selectOne(Wrappers.<Posts>lambdaQuery()
+                .eq(Posts::getId, id).eq(Posts::getStatus, 1).isNull(Posts::getDeletedAt));
+        if (post == null) {
+            throw BusinessException.notFound("文章不存在或未公开");
+        }
+        return post;
     }
 
     private Posts requirePost(Long id) {

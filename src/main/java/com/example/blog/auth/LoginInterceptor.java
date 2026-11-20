@@ -1,6 +1,5 @@
 package com.example.blog.auth;
 
-import com.example.blog.service.TokenService;
 import com.example.blog.service.UserService;
 import com.example.blog.vo.UsersVO;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +19,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     public static final String CURRENT_USER = "blog.currentUser";
     public static final String CURRENT_TOKEN = "blog.currentToken";
 
-    private final TokenService tokenService;
+    private final TokenManager tokenManager;
     private final UserService userService;
 
     @Override
@@ -34,7 +33,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             return true;
         }
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
-        String token = tokenService.resolveBearerToken(request.getHeader(HttpHeaders.AUTHORIZATION));
+        String token = tokenManager.resolveBearerToken(request.getHeader(HttpHeaders.AUTHORIZATION));
         UsersVO user = userService.currentUser(token);
         request.setAttribute(CURRENT_USER, user);
         request.setAttribute(CURRENT_TOKEN, token);

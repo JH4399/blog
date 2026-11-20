@@ -2,6 +2,7 @@ package com.example.blog.common;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -18,6 +19,13 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 public class RedisService {
+
+    private static final DefaultRedisScript<Long> DELETE_IF_VALUE_MATCHES = new DefaultRedisScript<>("""
+            if redis.call('get', KEYS[1]) == ARGV[1] then
+                return redis.call('del', KEYS[1])
+            end
+            return 0
+            """, Long.class);
 
     private final StringRedisTemplate redisTemplate;
 
@@ -43,6 +51,12 @@ public class RedisService {
 
     public boolean delete(String key) {
         return Boolean.TRUE.equals(redisTemplate.delete(key));
+    }
+
+    /** 原子比较后删除，适用于只释放当前请求持有的去重标记。 */
+    public boolean deleteIfValueMatches(String key, String expectedValue) {
+        return Long.valueOf(1).equals(redisTemplate.execute(
+                DELETE_IF_VALUE_MATCHES, List.of(key), expectedValue));
     }
 
     public long delete(Collection<String> keys) {
