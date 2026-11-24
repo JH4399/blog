@@ -105,8 +105,11 @@ public class PostViewCounter {
 
     private static String digest(String identity) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+            String identitySHA;
+            identitySHA = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                     .digest(identity.getBytes(StandardCharsets.UTF_8)));
+            log.info("此次加密后的SHA-256为：" + identitySHA);
+            return identitySHA;
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("当前运行环境不支持 SHA-256", exception);
         }

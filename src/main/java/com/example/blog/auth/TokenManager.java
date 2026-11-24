@@ -4,6 +4,7 @@ import com.example.blog.common.RedisService;
 import com.example.blog.config.AuthProperties;
 import com.example.blog.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.util.HexFormat;
 import java.util.regex.Pattern;
 
 /** 随机 Token 登录态：Redis 仅保存摘要和用户 ID，不保存原始凭据。 */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TokenManager {
@@ -40,6 +42,7 @@ public class TokenManager {
                 RANDOM.nextBytes(bytes);
                 String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
                 if (redisService.setIfAbsent(key(token), userId.toString(), Duration.ofSeconds(expiresIn))) {
+                    log.info("登录成功，用户的token是：" + token);
                     return new IssuedToken(token, expiresIn);
                 }
             }

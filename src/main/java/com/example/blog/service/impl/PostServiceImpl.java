@@ -119,8 +119,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResult<PostListVO> list(PostListQuery query, UsersVO user) {
+        boolean publicOnly = user == null;
+        Long viewerId = publicOnly || isAdmin(user) ? null : user.getId();
         var page = postMapper.selectListPage(new Page<PostListVO>(query.getPage(), query.getSize()),
-                query, isAdmin(user) ? null : user.getId());
+                query, viewerId, publicOnly);
         return new PageResult<>(page.getRecords(), page.getTotal(), query.getPage(), query.getSize(), page.getPages());
     }
 

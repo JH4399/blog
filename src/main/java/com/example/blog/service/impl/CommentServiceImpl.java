@@ -134,7 +134,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private static boolean canManage(Posts post, UsersVO user) {
-        return Integer.valueOf(2).equals(user.getRole()) || user.getId().equals(post.getUserId());
+        return user != null && (Integer.valueOf(2).equals(user.getRole()) || user.getId().equals(post.getUserId()));
     }
 
     private static String truncate(String value, int maxLength) {

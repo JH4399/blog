@@ -13,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.LinkedHashMap;
@@ -40,6 +42,19 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         ApiResponse<Void> response = ApiResponse.error(500, "服务器内部错误，请稍后重试");
         return handleExceptionInternal(exception, response, new HttpHeaders(),
                 HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException exception,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return handleExceptionInternal(exception, ApiResponse.error(413, "上传文件或请求体超过大小限制"),
+                headers, HttpStatus.PAYLOAD_TOO_LARGE, request);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<Object> handleMultipartException(MultipartException exception, WebRequest request) {
+        return handleExceptionInternal(exception, ApiResponse.error(400, "上传请求格式错误"),
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
     }
 
     @Override

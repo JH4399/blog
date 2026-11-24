@@ -12,14 +12,19 @@
         LEFT JOIN "BLOG"."users" u ON u."id"=p."user_id"
         LEFT JOIN "BLOG"."categories" c ON c."id"=p."category_id"
         WHERE p."deleted_at" IS NULL
-        <if test="query.status != null">
-            AND p."status"=#{query.status}
-        </if>
+        <choose>
+            <when test="publicOnly">AND p."status"=1</when>
+            <when test="query.status != null">AND p."status"=#{query.status}</when>
+        </choose>
         <if test="query.categoryId != null">
             AND p."category_id"=#{query.categoryId}
         </if>
         <if test="query.authorId != null">
             AND p."user_id"=#{query.authorId}
+        </if>
+        <if test="query.tagId != null">
+            AND EXISTS (SELECT 1 FROM "BLOG"."post_tags" pt
+                        WHERE pt."post_id"=p."id" AND pt."tag_id"=#{query.tagId})
         </if>
         <if test="viewerId != null">
             AND (p."user_id"=#{viewerId} OR p."status"=1)

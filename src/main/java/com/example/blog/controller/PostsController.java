@@ -67,13 +67,12 @@ public class PostsController {
         return ApiResponse.success("删除成功", null);
     }
 
-    @LoginRequired
-    @SecurityRequirement(name = "BearerAuth")
-    @Operation(summary = "查询文章列表", description = "普通用户可查看本人文章和他人已发布文章，管理员可查看全部；分页默认page=1、size=10")
+    @Operation(summary = "查询文章列表", description = "无需登录；游客仅查看已发布文章，普通用户可查看本人文章和他人已发布文章，管理员可查看全部；可携带 Bearer Token，分页默认page=1、size=10")
     @GetMapping(value = "/posts", produces = "application/json")
     public ApiResponse<PageResult<PostListVO>> list(@Valid @ParameterObject @ModelAttribute PostListQuery query,
-            @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
-        return ApiResponse.success(postService.list(query, user));
+            HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+        return ApiResponse.success(postService.list(query, resolveOptionalUser(request)));
     }
 
     @LoginRequired
@@ -100,11 +99,16 @@ public class PostsController {
             HttpServletRequest request, HttpServletResponse response) {
         // 每次阅读均到达服务端，避免浏览器或共享缓存绕过计数及身份判断。
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
-        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        Long readerId = authorization == null ? null
-                : userService.currentUser(tokenManager.resolveBearerToken(authorization)).getId();
+        UsersVO reader = resolveOptionalUser(request);
+        Long readerId = reader == null ? null : reader.getId();
         // 不直接信任客户端传入的 X-Forwarded-For / X-Real-IP。
         return ApiResponse.success(postService.read(id, readerId, request.getRemoteAddr(),
                 "GET".equals(request.getMethod())));
+    }
+
+    private UsersVO resolveOptionalUser(HttpServletRequest request) {
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        return authorization == null ? null
+                : userService.currentUser(tokenManager.resolveBearerToken(authorization));
     }
 }

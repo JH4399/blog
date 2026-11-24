@@ -24,7 +24,7 @@ public interface PostMapper extends BaseMapper<Posts> {
     int incrementPublishedViewCount(@Param("id") Long id);
 
     IPage<PostListVO> selectListPage(IPage<PostListVO> page, @Param("query") PostListQuery query,
-            @Param("viewerId") Long viewerId);
+            @Param("viewerId") Long viewerId, @Param("publicOnly") boolean publicOnly);
 
     @Select("""
             SELECT COUNT(*) AS "posts",

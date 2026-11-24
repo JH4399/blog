@@ -12,7 +12,9 @@ public interface CommentService {
 
     void delete(Long id, UsersVO user);
 
+    /** user 可空，游客仅可查看已发布文章的评论。 */
     List<CommentsVO> list(Long postId, UsersVO user);
 
+    /** user 可空，可见范围与列表一致。 */
     CommentsVO get(Long id, UsersVO user);
 }

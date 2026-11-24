@@ -56,12 +56,12 @@ public class PostsDTO {
     private String summary;
 
     /** 正文（Markdown/HTML）。 */
-    @Schema(description = "正文（Markdown/HTML）")
+    @Schema(description = "正文（Markdown/HTML）；图片先通过 /api/uploads/images 上传，再将返回 url 插入正文")
     @NotBlank(message = "正文不能为空")
     private String content;
 
     /** 封面图 URL，最长 255 个字符。 */
-    @Schema(description = "封面图 URL", maxLength = 255)
+    @Schema(description = "封面图 URL 或图片上传接口返回的相对访问路径", maxLength = 255)
     @Size(max = 255, message = "封面图 URL 最多 255 个字符")
     private String coverImage;
 

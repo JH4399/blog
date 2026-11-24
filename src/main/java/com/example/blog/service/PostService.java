@@ -23,6 +23,7 @@ public interface PostService {
     /** 公开阅读，仅返回已发布文章；readerId 来自验证后的登录态，remoteAddress 来自服务端。 */
     PostsVO read(Long id, Long readerId, String remoteAddress, boolean countView);
 
+    /** user 为空时仅返回公开已发布文章。 */
     PageResult<PostListVO> list(PostListQuery query, UsersVO user);
 
     Map<String, Object> summary(UsersVO user);

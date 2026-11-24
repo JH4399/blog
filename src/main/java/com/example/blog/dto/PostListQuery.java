@@ -21,6 +21,10 @@ public class PostListQuery extends ListQuery {
     private Long categoryId;
 
     @Positive
+    @Schema(description = "标签ID")
+    private Long tagId;
+
+    @Positive
     @Schema(description = "作者ID，普通用户仅能查询本人文章及他人已发布文章")
     private Long authorId;
 
