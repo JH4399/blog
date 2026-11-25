@@ -4,6 +4,7 @@ import com.example.blog.common.ApiResponse;
 import com.example.blog.auth.LoginInterceptor;
 import com.example.blog.auth.LoginRequired;
 import com.example.blog.dto.UsersDTO;
+import com.example.blog.dto.UserStatusDTO;
 import com.example.blog.dto.UserListQuery;
 import com.example.blog.dto.UserLoginDTO;
 import com.example.blog.dto.UserRegisterDTO;
@@ -39,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
-@Tag(name = "用户管理", description = "用户注册、登录及管理员用户管理")
+@Tag(name = "用户管理", description = "用户注册、登录、本人资料修改及管理员用户状态管理")
 public class UsersController {
 
     private final UserService userService;
@@ -56,11 +57,21 @@ public class UsersController {
     @LoginRequired
     @SecurityRequirement(name = "BearerAuth")
     @PutMapping("/{id}")
-    @Operation(summary = "修改用户", description = "仅管理员可访问；完整提交可编辑字段；不允许禁用或降级当前账户，不修改用户名、密码和创建时间")
+    @Operation(summary = "修改本人资料", description = "仅允许修改当前登录用户自己的昵称、邮箱、头像和简介；完整提交可编辑字段，省略时清空；不修改角色、状态、用户名、密码和创建时间")
     public ApiResponse<UsersVO> update(@PathVariable @Positive Long id,
             @Valid @RequestBody UsersDTO request,
             @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
         return ApiResponse.success(userService.update(id, request, user));
+    }
+
+    @LoginRequired
+    @SecurityRequirement(name = "BearerAuth")
+    @PutMapping("/{id}/status")
+    @Operation(summary = "修改用户状态", description = "仅管理员可访问；只修改状态（0 禁用、1 正常）；不允许禁用当前登录账户")
+    public ApiResponse<UsersVO> updateStatus(@PathVariable @Positive Long id,
+            @Valid @RequestBody UserStatusDTO request,
+            @RequestAttribute(LoginInterceptor.CURRENT_USER) UsersVO user) {
+        return ApiResponse.success(userService.updateStatus(id, request, user));
     }
 
     /**

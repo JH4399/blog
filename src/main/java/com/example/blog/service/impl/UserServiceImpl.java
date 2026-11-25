@@ -3,6 +3,7 @@ package com.example.blog.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.blog.dto.UsersDTO;
+import com.example.blog.dto.UserStatusDTO;
 import com.example.blog.dto.UserListQuery;
 import com.example.blog.dto.UserLoginDTO;
 import com.example.blog.dto.UserRegisterDTO;
@@ -51,10 +52,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UsersVO update(Long id, UsersDTO request, UsersVO currentUser) {
-        requireAdmin(currentUser);
-        if (id.equals(currentUser.getId()) &&
-                (!Integer.valueOf(2).equals(request.getRole()) || !Integer.valueOf(1).equals(request.getStatus()))) {
-            throw BusinessException.conflict("不能禁用当前登录账户或降低自己的管理员角色");
+        if (currentUser == null || !Integer.valueOf(1).equals(currentUser.getStatus()) ||
+                !id.equals(currentUser.getId())) {
+            throw BusinessException.forbidden("只能修改自己的资料");
         }
         if (userMapper.selectById(id) == null) {
             throw BusinessException.notFound("用户不存在");
@@ -65,14 +65,31 @@ public class UserServiceImpl implements UserService {
                     .set(Users::getEmail, request.getEmail())
                     .set(Users::getAvatar, request.getAvatar())
                     .set(Users::getBio, request.getBio())
-                    .set(Users::getRole, request.getRole())
-                    .set(Users::getStatus, request.getStatus())
                     .set(Users::getUpdatedAt, LocalDateTime.now()));
             if (changed == 0) {
                 throw BusinessException.notFound("用户不存在");
             }
         } catch (DataIntegrityViolationException exception) {
             throw new BusinessException(HttpStatus.CONFLICT, "用户资料与现有记录冲突，请检查邮箱等字段", exception);
+        }
+        return toVO(userMapper.selectById(id));
+    }
+
+    @Override
+    @Transactional
+    public UsersVO updateStatus(Long id, UserStatusDTO request, UsersVO currentUser) {
+        requireAdmin(currentUser);
+        if (id.equals(currentUser.getId()) && !Integer.valueOf(1).equals(request.getStatus())) {
+            throw BusinessException.conflict("不能禁用当前登录账户");
+        }
+        if (userMapper.selectById(id) == null) {
+            throw BusinessException.notFound("用户不存在");
+        }
+        int changed = userMapper.update(null, Wrappers.<Users>lambdaUpdate().eq(Users::getId, id)
+                .set(Users::getStatus, request.getStatus())
+                .set(Users::getUpdatedAt, LocalDateTime.now()));
+        if (changed == 0) {
+            throw BusinessException.notFound("用户不存在");
         }
         return toVO(userMapper.selectById(id));
     }
