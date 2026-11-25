@@ -5,7 +5,7 @@
     <select id="selectListPage" resultType="com.example.blog.vo.PostListVO">
         <bind name="keyword" value="query.q == null ? '' : query.q.trim()"/>
         <bind name="pattern" value="'%' + keyword + '%'"/>
-        SELECT p."id", p."user_id", p."category_id", p."title", p."slug", p."status",
+        SELECT p."id", p."user_id", p."category_id", p."title", p."slug", p."cover_image", p."status",
                p."is_top", p."view_count", p."like_count", p."comment_count", p."created_at",
                COALESCE(u."nickname", u."username") AS "author_name", c."name" AS "category_name"
         FROM "BLOG"."posts" p

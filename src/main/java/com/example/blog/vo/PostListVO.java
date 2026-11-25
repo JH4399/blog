@@ -15,6 +15,8 @@ public class PostListVO {
     private Long categoryId;
     private String title;
     private String slug;
+    @Schema(description = "文章封面图片地址，可为空")
+    private String coverImage;
     @Schema(description = "状态：0草稿、1已发布、2私密")
     private Integer status;
     private Integer isTop;
